@@ -1,0 +1,41 @@
+// Towers of Hanoi Pseudo-Code
+
+struct Tower {
+    public:
+        int pop(); // pop top disk from diskStack
+        int push(int disk); // pushes disk onto top of diskStack
+        int numDisks;
+        int diskStack[]; // Disks on the tower
+} tower1, tower2, tower3 // Initialize towers
+
+// Recursive function with an algorithm to solve the game 
+// given a starting number of disks stacked from biggest to smallest on tower1
+// given a source tower and an auxiliary tower
+//
+
+int numDisks = #;
+public static int solveTowersOfHanoi(int sourceTower, int destTower, int auxTower) {
+
+    // exit condition
+    if (size of tower3.diskStack equals numDisks) {
+        print("Towers were solved");
+        exit recursive function
+    }
+
+    // assign disks to either the auxiliary or destination tower
+    while (sourceTower has disks) {
+        // this means that more disks can be moved into an empty tower, otherwise we
+        // would be trying to place a bigger disk on a smaller one
+        if (tower1.isEmpty() || tower2.isEmpty() || tower3.isEmpty()) {
+            // This means the disk is at an even space, and should be put in the auxiliary tower
+            if (top disk index % 2 == 0) {
+                move top disk into aux tower
+            } else {
+                move top disk into dest tower
+            }
+        } else {
+            // build stack of disks in auxiliary tower to clear up the destination tower
+            solveTowersOfHanoi(destTower, auxTower, sourceTower);
+        }
+    }
+}
