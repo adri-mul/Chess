@@ -6,4 +6,5 @@ public interface BoardEvaluator {
     
     int evaluate(Board board);
     int evaluate(Board board, BotMove4 bot);
+    
 }
