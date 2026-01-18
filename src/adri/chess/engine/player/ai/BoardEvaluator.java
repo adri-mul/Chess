@@ -1,10 +1,10 @@
 package adri.chess.engine.player.ai;
 
 import adri.chess.engine.board.Board;
+import adri.chess.engine.board.Move;
 
 public interface BoardEvaluator {
     
     int evaluate(Board board);
-    int evaluate(Board board, BotMove4 bot);
-    
+    void logBoardHistory(Board board, Move move);
 }

@@ -17,6 +17,8 @@ public class BotMove4 implements Bot { // Alpha-beta heuristic Minimax search wi
     private Move lastMove;
     private Move move;
     private int[] moveScores;
+    private long thinkTime; // in ms
+    private boolean searchCancelled;
 
     public BotMove4() {
         this.boardEvaluator = new EnhancedBoardEvaluator();
@@ -24,55 +26,57 @@ public class BotMove4 implements Bot { // Alpha-beta heuristic Minimax search wi
         this.lastMove = Move.NULL_MOVE; // to ward off many repetitions
         this.move = Move.NULL_MOVE;
         this.moveScores = new int[MAX_MOVES];
+        this.thinkTime = 1000; // in ms
     }
 
     public Move execute(Board board, final int depth) {
         final long startTime = System.currentTimeMillis();
+        final long endTime = startTime + this.thinkTime;
+        this.searchCancelled = false;
 
         Move bestMove = null;
         int alpha = Integer.MIN_VALUE + 1; // -infinity + 1 ( overflows :( )
         int beta = Integer.MAX_VALUE - 1; // +infinity - 1 ( overflows :( )
         
-        List<Move> moves = new ArrayList<>(board.getCurrentPlayer().getLegalMoves());
-        orderMoves(board);
-        for (int i = 0; i < moves.size(); i++) {
-            Move move = pickBest(moves, i);
-            MoveUpdate moveUpdate = board.getCurrentPlayer().playMove(move);
-            if (moveUpdate.getMoveStatus().isDone()) {
-                numPositions++;
-                int evaluation = -search(moveUpdate.getBoard(), depth - 1, -beta, -alpha);
-                if (bestMove == null) {
-                    bestMove = move;
+        if (searchCancelled) { // time up for search
+            System.out.println("Bot 4:");
+            System.out.println("Executed in " + (System.currentTimeMillis() - startTime) + "ms");
+            System.out.println("Searched over " + numPositions + " positions");
+            System.out.println("Best evaluation was " + alpha + "\n");
+            this.move = bestMove;
+            // log the move using zobrist
+            this.boardEvaluator.logBoardHistory(board, this.move);
+            return bestMove;
+        } else {
+            List<Move> moves = new ArrayList<>(board.getCurrentPlayer().getLegalMoves());
+            orderMoves(board);
+            for (int i = 0; i < moves.size(); i++) {
+                Move move = pickBest(moves, i);
+                MoveUpdate moveUpdate = board.getCurrentPlayer().playMove(move);
+                if (moveUpdate.getMoveStatus().isDone()) {
+                    numPositions++;
+                    int evaluation = -search(moveUpdate.getBoard(), depth - 1, -beta, -alpha, endTime);
+                    if (bestMove == null) {
+                        bestMove = move;
+                    }
+                    
+                    if (evaluation > alpha) {
+                        alpha = evaluation;
+                        bestMove = move;
+                    } // Don't do anything for beta
                 }
-                
-                if (evaluation > alpha) {
-                    alpha = evaluation;
-                    bestMove = move;
-                } // Don't do anything for beta
             }
+            // Already calculates first depth
+            System.out.println("Bot 4:");
+            System.out.println("Executed in " + (System.currentTimeMillis() - startTime) + "ms");
+            System.out.println("Searched over " + numPositions + " positions");
+            System.out.println("Best evaluation was " + alpha + "\n");
+            this.move = bestMove;
+            // log the move using zobrist
+            this.boardEvaluator.logBoardHistory(board, this.move);
+            return bestMove;
         }
-        // Already calculates first depth
-        /*for (Move move : orderMoves(board)) {
-            MoveUpdate moveUpdate = board.getCurrentPlayer().playMove(move);
-            if (moveUpdate.getMoveStatus().isDone()) {
-                numPositions++;
-                int evaluation = -search(moveUpdate.getBoard(), depth - 1, -beta, -alpha);
-                if (bestMove == null) {
-                    bestMove = move;
-                }
-                
-                if (evaluation > alpha) {
-                    alpha = evaluation;
-                    bestMove = move;
-                } // Don't do anything for beta
-            }
-        }*/
-        System.out.println("Bot 4:");
-        System.out.println("Executed in " + (System.currentTimeMillis() - startTime) + "ms");
-        System.out.println("Searched over " + numPositions + " positions");
-        System.out.println("Best evaluation was " + alpha + "\n");
-        this.move = bestMove;
-        return bestMove;
+        
     }
 
     public void orderMoves(Board board) {
@@ -101,9 +105,14 @@ public class BotMove4 implements Bot { // Alpha-beta heuristic Minimax search wi
         throw new RuntimeException("No implementation for minimax search");
     }
 
-    public int search(final Board board, final int depth, int alpha, int beta) {
+    public int search(final Board board, final int depth, int alpha, int beta, final long endTime) {
+        if (System.currentTimeMillis() >= endTime) {
+            this.searchCancelled = true;
+            return this.boardEvaluator.evaluate(board);
+        }
+
         if (depth == 0 || isGameOver(board)) {
-            return this.boardEvaluator.evaluate(board, this);
+            return this.boardEvaluator.evaluate(board);
         }
 
         for (final Move move : board.getCurrentPlayer().getLegalMoves()) {
@@ -111,7 +120,7 @@ public class BotMove4 implements Bot { // Alpha-beta heuristic Minimax search wi
 
             if (moveUpdate.getMoveStatus().isDone()) {
                 numPositions++;
-                int evaluation = -search(moveUpdate.getBoard(), depth - 1, -beta, -alpha);
+                int evaluation = -search(moveUpdate.getBoard(), depth - 1, -beta, -alpha, endTime);
 
                 if (evaluation >= beta) {
                     return beta;

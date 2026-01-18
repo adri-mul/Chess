@@ -219,13 +219,13 @@ public class Table {
                     Piece.setPromotionPiece(new Queen(generatedMove.getDestinationCoord(), chessBoard.getCurrentPlayer().getColor()));
                     boardPanel.drawBoard(chessBoard, false, true);
 
-                    if (isBlackBot) {
+                    if (isBlackBot && isWhiteBot) {
                         invokeLater(new Runnable() {
                             @Override
                             public void run() {
                                 if (!chessBoard.getCurrentPlayer().isInCheckMate() && !chessBoard.getCurrentPlayer().getOpponent().isInCheckMate()) {
-                                    blackBotPlay(1);
-                                    //botPlay4(depth);
+                                    //blackBotPlay(1);
+                                    botPlay4(depth);
                                 }
                             }
                         });
@@ -248,13 +248,13 @@ public class Table {
                     Piece.setPromotionPiece(new Queen(generatedMove.getDestinationCoord(), chessBoard.getCurrentPlayer().getColor()));
                     boardPanel.drawBoard(chessBoard, false, true);
 
-                    if (isBlackBot) {
+                    if (isBlackBot && isWhiteBot) {
                         invokeLater(new Runnable() {
                             @Override
                             public void run() {
                                 if (!chessBoard.getCurrentPlayer().isInCheckMate() && !chessBoard.getCurrentPlayer().getOpponent().isInCheckMate()) {
-                                    blackBotPlay(1);
-                                    //botPlay3(depth);
+                                    //blackBotPlay(1);
+                                    botPlay3(depth);
                                 }
                             }
                         });
@@ -817,7 +817,7 @@ public class Table {
                                         // white bot
                                         } if (isWhiteBot && !chessBoard.getCurrentPlayer().isInCheckMate()) {
                                             //whiteBotPlay(simStep);
-                                            botPlay3(DEPTH);
+                                            botPlay4(DEPTH);
                                         }
                                     }
                                 });
@@ -943,7 +943,7 @@ public class Table {
                                                 
                                                 } if (isWhiteBot && !chessBoard.getCurrentPlayer().isInCheckMate()) {
                                                         //whiteBotPlay(DEPTH);
-                                                        botPlay3(DEPTH);
+                                                        botPlay4(DEPTH);
                                                 }
                                             }
                                         });

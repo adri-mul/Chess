@@ -13,39 +13,53 @@ public class BotMove3 implements Bot { // With alpha-beta pruning
     
     private final BoardEvaluator boardEvaluator;
     private int numPositions;
+    private long thinkTime; // in ms
+    private boolean searchCancelled;
 
     public BotMove3() {
         this.boardEvaluator = new StandardBoardEvaluator();
         this.numPositions = 0;
+        this.thinkTime = 500; // in ms
     }
 
     public Move execute(Board board, final int depth) {
         final long startTime = System.currentTimeMillis();
+        final long endTime = startTime + this.thinkTime;
+        searchCancelled = false;
 
         Move bestMove = null;
         int alpha = Integer.MIN_VALUE + 1; // -infinity + 1 ( overflows :( )
         int beta = Integer.MAX_VALUE - 1; // +infinity - 1 ( overflows :( )
         
-        // Already calculates first depth
-        for (Move move : board.getCurrentPlayer().getLegalMoves()) {
-            MoveUpdate moveUpdate = board.getCurrentPlayer().playMove(move);
-            if (moveUpdate.getMoveStatus().isDone()) {
-                numPositions++;
-                int evaluation = -search(moveUpdate.getBoard(), depth - 1, -beta, -alpha);
-                if (bestMove == null) {
-                    bestMove = move;
+        if (searchCancelled ) {
+            System.out.println("Bot3:");
+            System.out.println("Executed in " + (System.currentTimeMillis() - startTime) + "ms");
+            System.out.println("Searched over " + numPositions + " positions");
+            System.out.println("Best evaluation was " + alpha + "\n");
+            return bestMove;
+        } else {
+            // Already calculates first depth
+            for (Move move : board.getCurrentPlayer().getLegalMoves()) {
+                MoveUpdate moveUpdate = board.getCurrentPlayer().playMove(move);
+                if (moveUpdate.getMoveStatus().isDone()) {
+                    numPositions++;
+                    int evaluation = -search(moveUpdate.getBoard(), depth - 1, -beta, -alpha, endTime);
+                    if (bestMove == null) {
+                        bestMove = move;
+                    }
+                    
+                    if (evaluation > alpha) {
+                        alpha = evaluation;
+                        bestMove = move;
+                    } // Don't do anything for beta
                 }
-                
-                if (evaluation > alpha) {
-                    alpha = evaluation;
-                    bestMove = move;
-                } // Don't do anything for beta
             }
+            System.out.println("Bot3:");
+            System.out.println("Executed in " + (System.currentTimeMillis() - startTime) + "ms");
+            System.out.println("Searched over " + numPositions + " positions");
+            System.out.println("Best evaluation was " + alpha + "\n");
+            return bestMove;
         }
-        System.out.println("Executed in " + (System.currentTimeMillis() - startTime) + "ms");
-        System.out.println("Searched over " + numPositions + " positions");
-        System.out.println("Best evaluation was " + alpha + "\n");
-        return bestMove;
     }
 
     // won't be using this
@@ -53,7 +67,12 @@ public class BotMove3 implements Bot { // With alpha-beta pruning
         throw new RuntimeException("No implementation for minimax search");
     }
 
-    public int search(final Board board, final int depth, int alpha, int beta) {
+    public int search(final Board board, final int depth, int alpha, int beta, final long endTime) {
+        if (System.currentTimeMillis() >= endTime) {
+            this.searchCancelled = true;
+            return this.boardEvaluator.evaluate(board);
+        }
+
         if (depth == 0 || isGameOver(board)) {
             return this.boardEvaluator.evaluate(board);
         }
@@ -63,7 +82,7 @@ public class BotMove3 implements Bot { // With alpha-beta pruning
 
             if (moveUpdate.getMoveStatus().isDone()) {
                 numPositions++;
-                int evaluation = -search(moveUpdate.getBoard(), depth - 1, -beta, -alpha);
+                int evaluation = -search(moveUpdate.getBoard(), depth - 1, -beta, -alpha, endTime);
 
                 if (evaluation >= beta) {
                     return beta;

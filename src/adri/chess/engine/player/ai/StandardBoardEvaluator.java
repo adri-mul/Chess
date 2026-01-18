@@ -1,6 +1,7 @@
 package adri.chess.engine.player.ai;
 
 import adri.chess.engine.board.Board;
+import adri.chess.engine.board.Move;
 import adri.chess.engine.pieces.Piece;
 import adri.chess.engine.player.Player;
 
@@ -44,11 +45,11 @@ public class StandardBoardEvaluator implements BoardEvaluator {
     private static int boardControlValue(Board board) {
         return board.getCurrentPlayer().getLegalMoves().size();
     }
-
+    
     @Override
-    public int evaluate(Board board, BotMove4 bot) {
+    public void logBoardHistory(Board board, Move move) {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'evaluate'");
+        throw new UnsupportedOperationException("Unimplemented method 'logBoardHistory'");
     }
 
 }

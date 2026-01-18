@@ -36,7 +36,7 @@ public abstract class Piece {
         return this.isFirstMove;
     }
 
-    private int computeHashCode() {
+    protected int computeHashCode() {
         int result = pieceType.hashCode();
         result = 31 * result + pieceColor.hashCode();
         result = 31 * result + piecePos[0]*8 + piecePos[1];
