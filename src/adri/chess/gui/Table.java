@@ -20,7 +20,8 @@ import java.util.stream.Stream;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
-
+import javax.swing.Box;
+import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
@@ -28,8 +29,10 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JRadioButton;
 
 import static javax.swing.SwingUtilities.isRightMouseButton;
 import static javax.swing.SwingUtilities.isLeftMouseButton;
@@ -53,6 +56,7 @@ import adri.chess.engine.player.ai.BotMove;
 import adri.chess.engine.player.ai.BotMove2;
 import adri.chess.engine.player.ai.BotMove3;
 import adri.chess.engine.player.ai.BotMove4;
+import adri.chess.engine.player.ai.BotMove5;
 
 public class Table {
     // constants
@@ -78,8 +82,14 @@ public class Table {
     private static boolean doHighlight;
     public boolean isBlackBot;
     public boolean isWhiteBot;
+    public int blackBot;
+    public int whiteBot;
     private boolean flipBoardOnTurn;
     private int simStep;
+    private boolean customBoardEnabled;
+
+    // Zobrist hashing history
+    public List<Long> history;
 
     public Table() {
         this.gameFrame = new JFrame("Adrian Chess");
@@ -87,12 +97,14 @@ public class Table {
         final JMenuBar menuBar = createMenuBar();
         this.gameFrame.setJMenuBar(menuBar);
         this.gameFrame.setSize(OUTER_FRAME_DIMENTION);
+        this.gameFrame.setLocationRelativeTo(null); // centers gameFrame on screen
         this.chessBoard = Board.createStandardBoard();
         this.gameHistoryPanel = new GameHistoryPanel();
         this.takenPiecesPanel = new TakenPiecesPanel();
         this.boardPanel = new BoardPanel();
         this.moveLog = new MoveLog();
         boardDirection = BoardDirection.REGULAR;
+        BoardUtils.initZobrist();
         //this.gameFrame.add(this.takenPiecesPanel, BorderLayout.WEST);
         this.gameFrame.add(this.boardPanel, BorderLayout.CENTER);
         this.gameFrame.add(this.gameHistoryPanel, BorderLayout.EAST);
@@ -103,6 +115,7 @@ public class Table {
         this.isWhiteBot = false;
         this.flipBoardOnTurn = false;
         this.simStep = 0;
+        this.customBoardEnabled = false;
     }
 
     private JMenuBar createMenuBar() {
@@ -225,7 +238,25 @@ public class Table {
                             public void run() {
                                 if (!chessBoard.getCurrentPlayer().isInCheckMate() && !chessBoard.getCurrentPlayer().getOpponent().isInCheckMate()) {
                                     //blackBotPlay(1);
-                                    botPlay4(depth);
+                                    if (whiteBot == 0) { // if the white bot is botPlay3, switch black bot. Else, switch white bot
+                                        switch (blackBot) {
+                                            case 0: botPlay3(depth); break;
+                                            case 1: botPlay4(depth); break;
+                                            case 2: botPlay5(depth); break;
+                                            default: {
+                                                System.out.println("There was an error with your bot selection.");
+                                            }
+                                        }
+                                    } else {
+                                        switch (whiteBot) {
+                                            case 0: botPlay3(depth); break;
+                                            case 1: botPlay4(depth); break;
+                                            case 2: botPlay5(depth); break;
+                                            default: {
+                                                System.out.println("There was an error with your bot selection.");
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         });
@@ -254,7 +285,72 @@ public class Table {
                             public void run() {
                                 if (!chessBoard.getCurrentPlayer().isInCheckMate() && !chessBoard.getCurrentPlayer().getOpponent().isInCheckMate()) {
                                     //blackBotPlay(1);
-                                    botPlay3(depth);
+                                    if (whiteBot == 1) { // if the white bot is botPlay4, switch black bot. Else, switch white bot
+                                        switch (blackBot) {
+                                            case 0: botPlay3(depth); break;
+                                            case 1: botPlay4(depth); break;
+                                            case 2: botPlay5(depth); break;
+                                            default: {
+                                                System.out.println("There was an error with your bot selection.");
+                                            }
+                                        }
+                                    } else {
+                                        switch (whiteBot) {
+                                            case 0: botPlay3(depth); break;
+                                            case 1: botPlay4(depth); break;
+                                            case 2: botPlay5(depth); break;
+                                            default: {
+                                                System.out.println("There was an error with your bot selection.");
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+        });
+        
+    }
+
+    public void botPlay5(int depth) {
+        BotMove5 generator = new BotMove5();
+        Move generatedMove = generator.execute(chessBoard, depth);
+        generator.setLastMove(generatedMove);
+        chessBoard = chessBoard.getCurrentPlayer().playMove(generatedMove).getBoard();
+        
+        invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    moveLog.addMove(generatedMove);
+                    Piece.setPromotionPiece(new Queen(generatedMove.getDestinationCoord(), chessBoard.getCurrentPlayer().getColor()));
+                    boardPanel.drawBoard(chessBoard, false, true);
+
+                    if (isBlackBot && isWhiteBot) {
+                        invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (!chessBoard.getCurrentPlayer().isInCheckMate() && !chessBoard.getCurrentPlayer().getOpponent().isInCheckMate()) {
+                                    //blackBotPlay(1);
+                                    if (whiteBot == 2) { // if the white bot is botPlay5, switch black bot. Else, switch white bot
+                                        switch (blackBot) {
+                                            case 0: botPlay3(depth); break;
+                                            case 1: botPlay4(depth); break;
+                                            case 2: botPlay5(depth); break;
+                                            default: {
+                                                System.out.println("There was an error with your bot selection.");
+                                            }
+                                        }
+                                    } else {
+                                        switch (whiteBot) {
+                                            case 0: botPlay3(depth); break;
+                                            case 1: botPlay4(depth); break;
+                                            case 2: botPlay5(depth); break;
+                                            default: {
+                                                System.out.println("There was an error with your bot selection.");
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         });
@@ -335,8 +431,15 @@ public class Table {
         openPGN.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                String input = JOptionPane.showInputDialog(gameFrame, "Enter a pgn");
+                chessBoard = Board.createFENBoard(input);
+                customBoardEnabled = true;
+                moveLog.clear();
+                gameHistoryPanel.clearTable();
+                takenPiecesPanel.clear();
+                boardPanel.drawBoard(chessBoard, doHighlight, true);
                 System.out.println("Open PGN"); 
-                }
+            }
         });
         gameMenu.add(openPGN);
                 
@@ -346,10 +449,12 @@ public class Table {
             @Override
             public void actionPerformed(ActionEvent e) {
                 chessBoard = Board.createStandardBoard();
-                moveLog.clear();
-                gameHistoryPanel.clearTable();
-                //gameHistoryPanel.updateMoveHistory(chessBoard, moveLog);
+                moveLog.getMoves().clear();
                 takenPiecesPanel.clear();
+                gameHistoryPanel.clearTable();
+                customBoardEnabled = false;
+                isWhiteBot = false; isBlackBot = false;
+                //gameHistoryPanel.updateMoveHistory(chessBoard, moveLog);
                 boardPanel.drawBoard(chessBoard, doHighlight, true);
             }
         });
@@ -376,11 +481,16 @@ public class Table {
             public void actionPerformed(ActionEvent e) {
                 isBlackBot = false;
                 isWhiteBot = false;
-                moveLog.getMoves().clear();
-                gameHistoryPanel.clearTable();
-                takenPiecesPanel.clear();
-                chessBoard = Board.createStandardBoard();
+                whiteBot = -1; blackBot = -1;
+                if (!customBoardEnabled && !(chessBoard.getWhitePlayer().isInCheckMate() || chessBoard.getBlackPlayer().isInCheckMate())) {
+                    moveLog.getMoves().clear();
+                    gameHistoryPanel.clearTable();
+                    takenPiecesPanel.clear();
+                    chessBoard = Board.createStandardBoard();
+                }
                 Table.boardDirection = boardDirection.getRegular(boardPanel.boardTiles);
+                customBoardEnabled = true;
+                
                 boardPanel.drawBoard(chessBoard, doHighlight, false);
             }
         });
@@ -392,11 +502,43 @@ public class Table {
             public void actionPerformed(ActionEvent e) {
                 isBlackBot = true;
                 isWhiteBot = false;
-                gameHistoryPanel.clearTable();
-                takenPiecesPanel.clear();
-                moveLog.getMoves().clear();
-                chessBoard = Board.createStandardBoard();
+                whiteBot = -1; blackBot = -1;
+                if (!customBoardEnabled && !(chessBoard.getWhitePlayer().isInCheckMate() || chessBoard.getBlackPlayer().isInCheckMate())) {
+                    chessBoard = Board.createStandardBoard();
+                    gameHistoryPanel.clearTable();
+                    takenPiecesPanel.clear();
+                    moveLog.getMoves().clear();
+                }
                 Table.boardDirection = boardDirection.getRegular(boardPanel.boardTiles);
+                // add options
+                JRadioButton blackPlayerBot3 = new JRadioButton("Bot v.3");
+                JRadioButton blackPlayerBot4 = new JRadioButton("Bot v.4");
+                JRadioButton blackPlayerBot5 = new JRadioButton("Bot v.5");
+                ButtonGroup blackGroup = new ButtonGroup();
+                blackGroup.add(blackPlayerBot3);blackGroup.add(blackPlayerBot4);blackGroup.add(blackPlayerBot5);
+                
+                // layout panel
+                JPanel panel = new JPanel(new GridLayout(0, 1));
+                panel.add(Box.createVerticalStrut(10));
+                panel.add(new JLabel("Choose a bot for black"));
+                panel.add(blackPlayerBot3);
+                panel.add(blackPlayerBot4);
+                panel.add(blackPlayerBot5);
+                int result = JOptionPane.showConfirmDialog(null, panel, "Select Bots", JOptionPane.OK_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+                if (result == JOptionPane.OK_OPTION) {
+                    blackBot = blackPlayerBot3.isSelected() ? 0 :
+                               blackPlayerBot4.isSelected() ? 1 :
+                               blackPlayerBot5.isSelected() ? 2 : -1;
+                }
+                // switch (blackBot) {
+                //     case 0: botPlay3(DEPTH); break;
+                //     case 1: botPlay4(DEPTH); break;
+                //     case 2: botPlay5(DEPTH); break;
+                //     default: {
+                //         System.out.println("There was an error with your bot selection.");
+                //     }
+                // }
                 boardPanel.drawBoard(chessBoard, doHighlight, false);
             }
         });
@@ -408,14 +550,46 @@ public class Table {
             public void actionPerformed(ActionEvent e) {
                 isBlackBot = false;
                 isWhiteBot = true;
-                gameHistoryPanel.clearTable();
-                takenPiecesPanel.clear();
-                moveLog.getMoves().clear();
-                chessBoard = Board.createStandardBoard();
+                whiteBot = -1; blackBot = -1;
+                if (!customBoardEnabled && !(chessBoard.getWhitePlayer().isInCheckMate() || chessBoard.getBlackPlayer().isInCheckMate())) {
+                    chessBoard = Board.createStandardBoard();
+                    gameHistoryPanel.clearTable();
+                    takenPiecesPanel.clear();
+                    moveLog.getMoves().clear();
+                }
                 Table.boardDirection = boardDirection.getFlipped(boardPanel.boardTiles);
                 simStep = 1;
-                whiteBotPlay(1);
-                //botPlay2(DEPTH);
+                
+                // layout panel
+                // add options
+                JRadioButton whitePlayerBot3 = new JRadioButton("Bot v.3");
+                JRadioButton whitePlayerBot4 = new JRadioButton("Bot v.4");
+                JRadioButton whitePlayerBot5 = new JRadioButton("Bot v.5");
+                ButtonGroup whiteGroup = new ButtonGroup();
+                whiteGroup.add(whitePlayerBot3);whiteGroup.add(whitePlayerBot4);whiteGroup.add(whitePlayerBot5);
+                
+                // layout panel
+                JPanel panel = new JPanel(new GridLayout(0, 1));
+                panel.add(new JLabel("Choose a bot for white"));
+                panel.add(whitePlayerBot3);
+                panel.add(whitePlayerBot4);
+                panel.add(whitePlayerBot5);
+                panel.add(Box.createVerticalStrut(10));
+                int result = JOptionPane.showConfirmDialog(null, panel, "Select Bots", JOptionPane.OK_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+                if (result == JOptionPane.OK_OPTION) {
+                    whiteBot = whitePlayerBot3.isSelected() ? 0 :
+                               whitePlayerBot4.isSelected() ? 1 :
+                               whitePlayerBot5.isSelected() ? 2 : -1;
+                }
+                switch (whiteBot) {
+                    case 0: botPlay3(DEPTH); break;
+                    case 1: botPlay4(DEPTH); break;
+                    case 2: botPlay5(DEPTH); break;
+                    default: {
+                        System.out.println("There was an error with your bot selection.");
+                    }
+                }
                 boardPanel.drawBoard(chessBoard, doHighlight, true);
             }
         });
@@ -427,15 +601,57 @@ public class Table {
             public void actionPerformed(ActionEvent e) {
                 isBlackBot = true;
                 isWhiteBot = true;
-                moveLog.getMoves().clear();
-                takenPiecesPanel.clear();
-                gameHistoryPanel.clearTable();
-                chessBoard = Board.createStandardBoard();
+                whiteBot = -1; blackBot = -1;
+                if (!customBoardEnabled && !(chessBoard.getWhitePlayer().isInCheckMate() || chessBoard.getBlackPlayer().isInCheckMate())) {
+                    chessBoard = Board.createStandardBoard();
+                    moveLog.getMoves().clear();
+                    takenPiecesPanel.clear();
+                    gameHistoryPanel.clearTable();
+                }
                 Table.boardDirection = boardDirection.getRegular(boardPanel.boardTiles);
                 doHighlight = false;
                 simStep = 1;
-                //whiteBotPlay(1);
-                botPlay3(DEPTH);
+                // add options
+                JRadioButton whitePlayerBot3 = new JRadioButton("Bot v.3");
+                JRadioButton whitePlayerBot4 = new JRadioButton("Bot v.4");
+                JRadioButton whitePlayerBot5 = new JRadioButton("Bot v.5");
+                ButtonGroup whiteGroup = new ButtonGroup();
+                whiteGroup.add(whitePlayerBot3);whiteGroup.add(whitePlayerBot4);whiteGroup.add(whitePlayerBot5);
+                JRadioButton blackPlayerBot3 = new JRadioButton("Bot v.3");
+                JRadioButton blackPlayerBot4 = new JRadioButton("Bot v.4");
+                JRadioButton blackPlayerBot5 = new JRadioButton("Bot v.5");
+                ButtonGroup blackGroup = new ButtonGroup();
+                blackGroup.add(blackPlayerBot3);blackGroup.add(blackPlayerBot4);blackGroup.add(blackPlayerBot5);
+                
+                // layout panel
+                JPanel panel = new JPanel(new GridLayout(0, 1));
+                panel.add(new JLabel("Choose a bot for white"));
+                panel.add(whitePlayerBot3);
+                panel.add(whitePlayerBot4);
+                panel.add(whitePlayerBot5);
+                panel.add(Box.createVerticalStrut(10));
+                panel.add(new JLabel("Choose a bot for black"));
+                panel.add(blackPlayerBot3);
+                panel.add(blackPlayerBot4);
+                panel.add(blackPlayerBot5);
+                int result = JOptionPane.showConfirmDialog(null, panel, "Select Bots", JOptionPane.OK_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+                if (result == JOptionPane.OK_OPTION) {
+                    whiteBot = whitePlayerBot3.isSelected() ? 0 :
+                               whitePlayerBot4.isSelected() ? 1 :
+                               whitePlayerBot5.isSelected() ? 2 : -1;
+                    blackBot = blackPlayerBot3.isSelected() ? 0 :
+                               blackPlayerBot4.isSelected() ? 1 :
+                               blackPlayerBot5.isSelected() ? 2 : -1;
+                }
+                switch (whiteBot) {
+                    case 0: botPlay3(DEPTH); break;
+                    case 1: botPlay4(DEPTH); break;
+                    case 2: botPlay5(DEPTH); break;
+                    default: {
+                        System.out.println("There was an error with your bot selection.");
+                    }
+                }
                 //botPlay2(DEPTH);
                 boardPanel.drawBoard(chessBoard, doHighlight, true);
             }
@@ -812,12 +1028,26 @@ public class Table {
                                     @Override
                                     public void run() {
                                         if (isBlackBot && !chessBoard.getCurrentPlayer().isInCheckMate()) {
-                                            //blackBotPlay(1);
-                                            botPlay4(DEPTH);
+                                            blackBotPlay(1);
+                                            switch (blackBot) {
+                                                case 0: botPlay3(DEPTH); break;
+                                                case 1: botPlay4(DEPTH); break;
+                                                case 2: botPlay5(DEPTH); break;
+                                                default: {
+                                                    System.out.println("There was an error with your bot selection.");
+                                                }
+                                            }
                                         // white bot
                                         } if (isWhiteBot && !chessBoard.getCurrentPlayer().isInCheckMate()) {
-                                            //whiteBotPlay(simStep);
-                                            botPlay4(DEPTH);
+                                            // whiteBotPlay(simStep);
+                                            switch (whiteBot) {
+                                                case 0: botPlay3(DEPTH); break;
+                                                case 1: botPlay4(DEPTH); break;
+                                                case 2: botPlay5(DEPTH); break;
+                                                default: {
+                                                    System.out.println("There was an error with your bot selection.");
+                                                }
+                                            }
                                         }
                                     }
                                 });
@@ -938,12 +1168,26 @@ public class Table {
                                             public void run() {
                                                 // Run the bots
                                                 if (isBlackBot && !chessBoard.getCurrentPlayer().isInCheckMate()) {
-                                                        //blackBotPlay(1);
-                                                        botPlay4(DEPTH);
+                                                        // blackBotPlay(1);
+                                                        switch (blackBot) {
+                                                            case 0: botPlay3(DEPTH); break;
+                                                            case 1: botPlay4(DEPTH); break;
+                                                            case 2: botPlay5(DEPTH); break;
+                                                            default: {
+                                                                System.out.println("There was an error with your bot selection.");
+                                                            }
+                                                        }
                                                 
                                                 } if (isWhiteBot && !chessBoard.getCurrentPlayer().isInCheckMate()) {
-                                                        //whiteBotPlay(DEPTH);
-                                                        botPlay4(DEPTH);
+                                                        // whiteBotPlay(DEPTH);
+                                                        switch (whiteBot) {
+                                                            case 0: botPlay3(DEPTH); break;
+                                                            case 1: botPlay4(DEPTH); break;
+                                                            case 2: botPlay5(DEPTH); break;
+                                                            default: {
+                                                                System.out.println("There was an error with your bot selection.");
+                                                            }
+                                                        }
                                                 }
                                             }
                                         });

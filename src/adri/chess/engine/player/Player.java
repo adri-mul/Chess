@@ -126,4 +126,6 @@ public abstract class Player {
     public abstract ChessColor getColor();
     public abstract Player getOpponent();
     public abstract Collection<Move> calculateKingCastles(Collection<Move> legalMoves, Collection<Move> opponentLegalMoves);
+
+    public abstract List<Move> getCaptureMoves();
 }

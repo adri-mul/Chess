@@ -9,19 +9,23 @@ import adri.chess.engine.board.Move;
 import adri.chess.engine.pieces.Piece;
 import adri.chess.engine.player.Player;
 
+// TODO make a board evaluator that aids simple king endgames
 public class EnhancedBoardEvaluator implements BoardEvaluator {
     private static final int CHECK_BONUS = 100;
     private static final int CHECK_MATE_BONUS = 100000;
     //private static final int DEPTH_BONUS = 100;
     private static final int CASTLE_BONUS = 60;
-    private static final int STALE_MATE_PENALTY = -1000;
 
-    private List<Long> history = new ArrayList<>();
+    private List<Long> history;
     private long currHash;
+
+    public EnhancedBoardEvaluator() {
+        history = new ArrayList<>();
+    }
 
     @Override
     public int evaluate(final Board board) {
-        return /* staleMatePenalty(board) + */  // position is equal if in stalemate (also discourages repetitions)
+        return isBoardInStaleMate(board) ? 0:   // position is equal if in stalemate (also discourages repetitions)
                materialValue(board.getCurrentPlayer()) + 
                checkValue(board) + checkMateValue(board) + 
                boardControlValue(board) + 
@@ -44,9 +48,11 @@ public class EnhancedBoardEvaluator implements BoardEvaluator {
     public void logBoardHistory(Board board, Move move) {
         if (history.size() == 0) {
             currHash = BoardUtils.computeFullHash(board);
+            //System.out.println(currHash);
             history.add(currHash);
         } else {
             currHash = BoardUtils.updateHash(currHash, move);
+            System.out.println(currHash);
             history.add(currHash);
         }
     } 
@@ -59,8 +65,8 @@ public class EnhancedBoardEvaluator implements BoardEvaluator {
         return board.getCurrentPlayer().getOpponent().isInCheckMate() ? CHECK_MATE_BONUS : 0;
     }
 
-    private int staleMatePenalty(Board board) {
-        return (board.getCurrentPlayer().isInStaleMate() || isThreeFoldRepetition(history, currHash)) ? STALE_MATE_PENALTY : 0;
+    private boolean isBoardInStaleMate(Board board) {
+        return (board.getCurrentPlayer().isInStaleMate() || isThreeFoldRepetition(history, currHash));
     }
 
     private int gameOverPenalty(Board board) {

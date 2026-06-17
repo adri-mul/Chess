@@ -19,7 +19,7 @@ public class BotMove3 implements Bot { // With alpha-beta pruning
     public BotMove3() {
         this.boardEvaluator = new StandardBoardEvaluator();
         this.numPositions = 0;
-        this.thinkTime = 500; // in ms
+        this.thinkTime = 1000; // in ms
     }
 
     public Move execute(Board board, final int depth) {

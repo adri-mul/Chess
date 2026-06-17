@@ -8,6 +8,7 @@ import java.util.List;
 import adri.chess.engine.ChessColor;
 import adri.chess.engine.board.Board;
 import adri.chess.engine.board.Move;
+import adri.chess.engine.board.Move.CaptureMove;
 import adri.chess.engine.board.Move.KingSideCastle;
 import adri.chess.engine.board.Move.QueenSideCastle;
 import adri.chess.engine.board.Tile;
@@ -69,6 +70,17 @@ public class WhitePlayer extends Player {
         }
 
         return Collections.unmodifiableList(kingCastles);
+    }
+
+    @Override
+    public List<Move> getCaptureMoves() {
+        List<Move> captureMoves = new ArrayList<>();
+        for (Move move : this.legalMoves) {
+            if (move instanceof CaptureMove) {
+                captureMoves.add(move);
+            }
+        }
+        return captureMoves;
     }
 
 }

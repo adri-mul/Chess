@@ -190,6 +190,50 @@ public class Board {
         return builder.build();
     }
 
+    public static Board createFENBoard(final String fen) {
+        final Builder builder = new Builder();
+
+        String[] data = fen.split(" ");
+        String[] boardSetup = data[0].split("/");
+        for (int i = 0; i < boardSetup.length; i++) {
+            String line = boardSetup[i];
+            int filePos = 0;
+            for (int c = 0; c < line.length(); c++) {
+                char tile = line.charAt(c);
+                switch (tile) {
+                    case 'r': builder.setPiece(new Rook(new int[]{i,filePos}, ChessColor.BLACK)); break;
+                    case 'n': builder.setPiece(new Knight(new int[]{i,filePos}, ChessColor.BLACK)); break;
+                    case 'b': builder.setPiece(new Bishop(new int[]{i,filePos}, ChessColor.BLACK)); break;
+                    case 'q': builder.setPiece(new Queen(new int[]{i,filePos}, ChessColor.BLACK)); break;
+                    case 'k': builder.setPiece(new King(new int[]{i,filePos}, ChessColor.BLACK, data[2].contains("k"), data[2].contains("q"))); break;
+                    case 'p': builder.setPiece(new Pawn(new int[]{i,filePos}, ChessColor.BLACK)); break;
+                    case 'P': builder.setPiece(new Pawn(new int[]{i,filePos}, ChessColor.WHITE)); break;
+                    case 'R': builder.setPiece(new Rook(new int[]{i,filePos}, ChessColor.WHITE)); break;
+                    case 'N': builder.setPiece(new Knight(new int[]{i,filePos}, ChessColor.WHITE)); break;
+                    case 'B': builder.setPiece(new Bishop(new int[]{i,filePos}, ChessColor.WHITE)); break;
+                    case 'Q': builder.setPiece(new Queen(new int[]{i,filePos}, ChessColor.WHITE)); break;
+                    case 'K': builder.setPiece(new King(new int[]{i,filePos}, ChessColor.WHITE, data[2].contains("K"), data[2].contains("Q"))); break;
+                    default: // assumes that it must be an integer (but catches it just in case)
+                    {
+                        try {
+                            int emptyTiles = tile - '0';
+                            /*for (int j = 1; j <= emptyTiles; j++) {
+                                builder.removePiece(new int[]{i,c+j});
+                            }*/
+                            filePos += emptyTiles - 1;
+                        } catch (Exception e) {
+                            System.out.println("character read in: Board.createFENBoard() was likely not a digit");
+                        }
+                    }
+                    
+                }
+                filePos++;
+            }
+        }
+        builder.setCurrentColor(data[1].equalsIgnoreCase("w") ? ChessColor.WHITE: ChessColor.BLACK);
+        return builder.build();
+    }
+
     public static Board createCustomBoard() {
         final Builder builder = new Builder();
         // black pieces

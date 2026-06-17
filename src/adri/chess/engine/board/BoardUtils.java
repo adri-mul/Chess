@@ -40,7 +40,7 @@ public class BoardUtils {
     }
 
     // Generated with AI
-    public void initZobrist() {
+    public static void initZobrist() {
         java.util.Random rng = new java.util.Random(20240115);
 
         for (int p = 0; p < 12; p++) {
