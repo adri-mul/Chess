@@ -16,7 +16,7 @@ public class EnhancedBoardEvaluator implements BoardEvaluator {
     //private static final int DEPTH_BONUS = 100;
     private static final int CASTLE_BONUS = 60;
 
-    private List<Long> history;
+    private ArrayList<Long> history;
     private long currHash;
 
     public EnhancedBoardEvaluator() {
@@ -29,7 +29,7 @@ public class EnhancedBoardEvaluator implements BoardEvaluator {
                materialValue(board.getCurrentPlayer()) + 
                checkValue(board) + checkMateValue(board) + 
                boardControlValue(board) + 
-               gameOverPenalty(board) +
+               checkMatePenalty(board) +
                castleValue(board);
     }
 
@@ -48,7 +48,6 @@ public class EnhancedBoardEvaluator implements BoardEvaluator {
     public void logBoardHistory(Board board, Move move) {
         if (history.size() == 0) {
             currHash = BoardUtils.computeFullHash(board);
-            //System.out.println(currHash);
             history.add(currHash);
         } else {
             currHash = BoardUtils.updateHash(currHash, move);
@@ -69,7 +68,7 @@ public class EnhancedBoardEvaluator implements BoardEvaluator {
         return (board.getCurrentPlayer().isInStaleMate() || isThreeFoldRepetition(history, currHash));
     }
 
-    private int gameOverPenalty(Board board) {
+    private int checkMatePenalty(Board board) {
         return board.getCurrentPlayer().isInCheckMate() ? -CHECK_MATE_BONUS : 0;
     }
 
@@ -86,10 +85,15 @@ public class EnhancedBoardEvaluator implements BoardEvaluator {
         for (int i = history.size() - 1; i >= 0; i--) {
             if (history.get(i) == currHash) {
                 count++;
-                if (count >= 3) return true;
+                if (count >= 2) return true;
             }
         }
 
         return false;
+    }
+
+    // debug
+    public long getCurrHash() {
+        return currHash;
     }
 }

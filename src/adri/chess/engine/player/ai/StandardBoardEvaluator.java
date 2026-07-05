@@ -52,4 +52,10 @@ public class StandardBoardEvaluator implements BoardEvaluator {
         throw new UnsupportedOperationException("Unimplemented method 'logBoardHistory'");
     }
 
+    @Override
+    public long getCurrHash() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getCurrHash'");
+    }
+
 }

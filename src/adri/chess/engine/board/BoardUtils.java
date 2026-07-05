@@ -77,7 +77,7 @@ public class BoardUtils {
     }
 
     public static long computeFullHash(Board board) {
-        long hash = 0;
+        long hash = 1;
         for (int rank = 0; rank < NUM_RANKS; rank++) {
             for (int file = 0; file < NUM_FILES; file++) {
                 Piece piece = board.getTile(new int[]{rank, file}).getPiece();

@@ -7,4 +7,5 @@ public interface BoardEvaluator {
     
     int evaluate(Board board);
     void logBoardHistory(Board board, Move move);
+    public long getCurrHash();
 }

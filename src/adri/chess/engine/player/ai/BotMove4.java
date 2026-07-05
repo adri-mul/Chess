@@ -40,6 +40,7 @@ public class BotMove4 implements Bot { // Alpha-beta heuristic Minimax search wi
         
         if (searchCancelled) { // time up for search
             System.out.println("Bot 4:");
+            System.out.println("Current Board Hash: " + boardEvaluator.getCurrHash());
             System.out.println("Executed in " + (System.currentTimeMillis() - startTime) + "ms");
             System.out.println("Searched over " + numPositions + " positions");
             System.out.println("Best evaluation was " + alpha + "\n");

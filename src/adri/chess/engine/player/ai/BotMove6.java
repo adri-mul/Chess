@@ -1,8 +1,8 @@
 package adri.chess.engine.player.ai;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import adri.chess.engine.board.Board;
 import adri.chess.engine.board.BoardUtils;
@@ -10,7 +10,8 @@ import adri.chess.engine.board.Move;
 import adri.chess.engine.pieces.Piece;
 import adri.chess.engine.player.MoveUpdate;
 
-public class BotMove5 implements Bot { // BotMove4 + quiescense search & history lookup
+public class BotMove6 implements Bot {
+
     private static final int MAX_MOVES = 218; // max moves in a chess position
     private static final int HISTORY_BONUS = 1000; // bonus for moves with good history
     
@@ -23,7 +24,7 @@ public class BotMove5 implements Bot { // BotMove4 + quiescense search & history
     private boolean searchCancelled;
     private int[][] historyTable; // track good moves: [from][to] -> score
 
-    public BotMove5() {
+    public BotMove6() {
         this.boardEvaluator = new EnhancedBoardEvaluator();
         this.numPositions = 0;
         this.lastMove = Move.NULL_MOVE; // to ward off many repetitions
@@ -238,4 +239,5 @@ public class BotMove5 implements Bot { // BotMove4 + quiescense search & history
         System.out.println("Searched over " + numPositions + " positions");
         System.out.println("Best evaluation was " + alpha + "\n");
     }
+    
 }

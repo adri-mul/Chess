@@ -88,6 +88,13 @@ public class Table {
     private int simStep;
     private boolean customBoardEnabled;
 
+    // Generators
+    private final BotMove generator1 = new BotMove();
+    private final BotMove2 generator2 = new BotMove2();
+    private final BotMove3 generator3 = new BotMove3();
+    private final BotMove4 generator4 = new BotMove4();
+    private final BotMove5 generator5 = new BotMove5();
+
     // Zobrist hashing history
     public List<Long> history;
 
@@ -178,8 +185,7 @@ public class Table {
     }
 
     public void botPlay(int depth) {
-        BotMove generator = new BotMove();
-        Move generatedMove = generator.execute(chessBoard, depth);
+        Move generatedMove = generator1.execute(chessBoard, depth);
         chessBoard = chessBoard.getCurrentPlayer().playMove(generatedMove).getBoard();
         
         invokeLater(new Runnable() {
@@ -193,8 +199,7 @@ public class Table {
     }
 
     public void botPlay2(int depth) {
-        BotMove2 generator = new BotMove2();
-        Move generatedMove = generator.execute(chessBoard, depth);
+        Move generatedMove = generator2.execute(chessBoard, depth);
         chessBoard = chessBoard.getCurrentPlayer().playMove(generatedMove).getBoard();
         
         invokeLater(new Runnable() {
@@ -221,8 +226,7 @@ public class Table {
     }
 
     public void botPlay3(int depth) {
-        BotMove3 generator = new BotMove3();
-        Move generatedMove = generator.execute(chessBoard, depth);
+        Move generatedMove = generator3.execute(chessBoard, depth);
         chessBoard = chessBoard.getCurrentPlayer().playMove(generatedMove).getBoard();
         
         invokeLater(new Runnable() {
@@ -267,9 +271,8 @@ public class Table {
     }
 
     public void botPlay4(int depth) {
-        BotMove4 generator = new BotMove4();
-        Move generatedMove = generator.execute(chessBoard, depth);
-        generator.setLastMove(generatedMove);
+        Move generatedMove = generator4.execute(chessBoard, depth);
+        generator4.setLastMove(generatedMove);
         chessBoard = chessBoard.getCurrentPlayer().playMove(generatedMove).getBoard();
         
         invokeLater(new Runnable() {
@@ -314,9 +317,8 @@ public class Table {
     }
 
     public void botPlay5(int depth) {
-        BotMove5 generator = new BotMove5();
-        Move generatedMove = generator.execute(chessBoard, depth);
-        generator.setLastMove(generatedMove);
+        Move generatedMove = generator5.execute(chessBoard, depth);
+        generator5.setLastMove(generatedMove);
         chessBoard = chessBoard.getCurrentPlayer().playMove(generatedMove).getBoard();
         
         invokeLater(new Runnable() {
@@ -652,7 +654,6 @@ public class Table {
                         System.out.println("There was an error with your bot selection.");
                     }
                 }
-                //botPlay2(DEPTH);
                 boardPanel.drawBoard(chessBoard, doHighlight, true);
             }
         });
@@ -1028,7 +1029,7 @@ public class Table {
                                     @Override
                                     public void run() {
                                         if (isBlackBot && !chessBoard.getCurrentPlayer().isInCheckMate()) {
-                                            blackBotPlay(1);
+                                            // blackBotPlay(1);
                                             switch (blackBot) {
                                                 case 0: botPlay3(DEPTH); break;
                                                 case 1: botPlay4(DEPTH); break;
@@ -1112,14 +1113,6 @@ public class Table {
                 
                 @Override
                 public void mousePressed(MouseEvent e) {
-                    /*if (selectTile == null) {
-                        selectTile = chessBoard.getTile(tileId);
-                        if (selectTile.hasPiece() && selectTile.getPiece().getPieceColor().equals(chessBoard.getCurrentPlayer().getColor())) {
-                            playerMovedPiece = selectTile.getPiece();
-                        } else {
-                            selectTile = null;
-                        }
-                    }*/
                    // if selecting new tile
                         if (selectTile == null) {
                             selectTile = chessBoard.getTile(tileId);
@@ -1204,6 +1197,7 @@ public class Table {
                                     }
                                 }
                             } else {
+                                // Color selected tile red
                                 selectTile = null;
                                 destinationTile = null;
                                 playerMovedPiece = null;
