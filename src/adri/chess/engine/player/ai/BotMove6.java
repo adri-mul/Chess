@@ -34,61 +34,109 @@ public class BotMove6 implements Bot {
         this.historyTable = new int[64][64]; // 64 squares from, 64 squares to
     }
 
-    public Move execute(Board board, final int depth) {
+    public Move execute(Board board, final int maxDepth) {
         final long startTime = System.currentTimeMillis();
         final long endTime = startTime + this.thinkTime;
         this.searchCancelled = false;
-        
+        this.numPositions = 0;
+
         // Reset history table for new search
-        for (int i = 0; i < 64; i++) {
-            for (int j = 0; j < 64; j++) {
-                historyTable[i][j] = 0;
-            }
+        // for (int i = 0; i < 64; i++) {
+        //     for (int j = 0; j < 64; j++) {
+        //         historyTable[i][j] = 0;
+        //     }
+        // }
+
+        Move bestMove = Move.NULL_MOVE;
+        int bestEvaluation = Integer.MIN_VALUE + 1;
+
+        if (maxDepth <= 0) {
+            // If caller passes zero or negative depth, do a single shallow evaluation and keep the board unchanged.
+            this.move = bestMove;
+            this.boardEvaluator.logBoardHistory(board, this.move);
+            printDebugInfo(startTime, bestEvaluation, numPositions);
+            return bestMove;
         }
 
-        Move bestMove = null;
-        int alpha = Integer.MIN_VALUE + 1; // -infinity + 1 ( overflows :( )
-        int beta = Integer.MAX_VALUE - 1; // +infinity - 1 ( overflows :( )
-        
-        if (searchCancelled) { // time up for search
-            printDebugInfo(startTime, alpha, numPositions);
-            this.move = bestMove;
-            // log the move using zobrist
-            this.boardEvaluator.logBoardHistory(board, this.move);
-            return bestMove;
-        } else {
+        for (int depth = 1; depth <= maxDepth; depth++) {
+            if (System.currentTimeMillis() >= endTime) {
+                this.searchCancelled = true;
+                break;
+            }
+
+            int alpha = Integer.MIN_VALUE + 1; // -infinity + 1 ( overflows :( )
+            int beta = Integer.MAX_VALUE - 1; // +infinity - 1 ( overflows :( )
+            Move iterationBestMove = Move.NULL_MOVE;
+            int iterationBestEvaluation = Integer.MIN_VALUE + 1;
+
             List<Move> moves = new ArrayList<>(board.getCurrentPlayer().getLegalMoves());
-            orderMoves(moves, board);
+            // Use previous iteration's best move as the preferred (principal variation) move
+            orderMoves(moves, board, bestMove);
             for (int i = 0; i < moves.size(); i++) {
+                if (System.currentTimeMillis() >= endTime) {
+                    this.searchCancelled = true;
+                    break;
+                }
+
                 Move move = pickBest(moves, i);
                 MoveUpdate moveUpdate = board.getCurrentPlayer().playMove(move);
                 if (moveUpdate.getMoveStatus().isDone()) {
                     numPositions++;
                     int evaluation = -search(moveUpdate.getBoard(), depth - 1, -beta, -alpha, endTime);
-                    if (bestMove == null) {
-                        bestMove = move;
+
+                    if (evaluation > iterationBestEvaluation) {
+                        iterationBestEvaluation = evaluation;
+                        iterationBestMove = move;
                     }
-                    
+
                     if (evaluation > alpha) {
                         alpha = evaluation;
-                        bestMove = move;
-                    } // Don't do anything for beta
+                        iterationBestEvaluation = evaluation;
+                        iterationBestMove = move;
+                    }
                 }
             }
-            // Already calculates first depth
-            this.move = bestMove;
-            // log the move using zobrist
-            this.boardEvaluator.logBoardHistory(board, this.move);
-            printDebugInfo(startTime, alpha, numPositions);
-            return bestMove;
+
+            if (!this.searchCancelled && iterationBestMove != Move.NULL_MOVE) {
+                bestMove = iterationBestMove;
+                bestEvaluation = iterationBestEvaluation;
+            }
+
+            if (this.searchCancelled) {
+                this.boardEvaluator.logBoardHistory(board, this.move);
+                printDebugInfo(startTime, bestEvaluation, numPositions);
+                return bestMove;
+            }
         }
-        
+
+        this.move = bestMove;
+        // log the move using zobrist
+        this.boardEvaluator.logBoardHistory(board, this.move);
+        printDebugInfo(startTime, bestEvaluation, numPositions);
+        return bestMove;
     }
 
-    public void orderMoves(List<Move> moves, Board board) {
+    // Updated to allow a preferred move (from previous iteration) to be boosted
+    public void orderMoves(List<Move> moves, Board board, Move preferredMove) {
         int i = 0;
         for (Move move : moves) {
             moveScores[i] = scoreMove(move, board, 0);
+            // If this move matches the preferred move from the previous iterative-deepening iteration,
+            // give it a very large bonus so it gets examined first (improves alpha-beta pruning).
+            if (preferredMove != Move.NULL_MOVE) {
+                boolean sameMove = false;
+                try {
+                    sameMove = move.equals(preferredMove);
+                } catch (Exception ignored) {
+                }
+                if (!sameMove) {
+                    sameMove = move.getCurrentCoord() == preferredMove.getCurrentCoord() &&
+                               move.getDestinationCoord() == preferredMove.getDestinationCoord();
+                }
+                if (sameMove) {
+                    moveScores[i] += 1_000_000;
+                }
+            }
             i++;
         }
 
@@ -113,7 +161,9 @@ public class BotMove6 implements Bot {
         }
 
         List<Move> moves = new ArrayList<>(board.getCurrentPlayer().getLegalMoves());
-        orderMoves(moves, board);
+        // In recursive searches we don't have a PV from previous full-iteration at this node,
+        // so pass NULL_MOVE to use history heuristic only.
+        orderMoves(moves, board, Move.NULL_MOVE);
         for (int i = 0; i < moves.size(); i++) {
             final Move move = pickBest(moves, i);
             final MoveUpdate moveUpdate = board.getCurrentPlayer().playMove(move);
@@ -144,7 +194,7 @@ public class BotMove6 implements Bot {
         alpha = Math.max(alpha, evaluation);
 
         List<Move> captures = new ArrayList<>(board.getCurrentPlayer().getCaptureMoves());
-        orderMoves(captures, board);
+        orderMoves(captures, board, Move.NULL_MOVE);
 
         for (int i = 0; i < captures.size(); i++) {
             Move move = pickBest(captures, i);
@@ -233,7 +283,7 @@ public class BotMove6 implements Bot {
     }
 
     public void printDebugInfo(long startTime, int alpha, int numPositions) {
-        System.out.println("Bot 5:");
+        System.out.println("Bot 6:");
         System.out.println("Current Board Hash: " + boardEvaluator.getCurrHash());
         System.out.println("Executed in " + (System.currentTimeMillis() - startTime) + "ms");
         System.out.println("Searched over " + numPositions + " positions");
