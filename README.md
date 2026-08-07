@@ -1,8 +1,3 @@
-```markdown
-## Existing Content
-This is some existing content in the README.
-```
-
 # Java Chess
 
 A simple chess application written in Java. This repository contains the source code for a playable chess game, including game logic, board representation, move validation, and a user interface (console or GUI depending on the project structure).
